@@ -22,6 +22,11 @@ optParser.add_option("--PE", help="Paired-end read input. Must have the exact sa
                     action="store_false", default="False", dest="seqtype")
 optParser.add_option("--cleanup", help="Clean up the intermediate files to save space. Default action is to retain the intermediate files. Usage: --cleanup=True",
                     action="store", default="False", dest="cleanup")
+optParser.add_option("--verbose", help="Display more output for each step of the analysis.",
+                    action="store_true", default="False", dest="verbose")
+optParser.add_option("--noninteractive", help="Non-interactive mode. This is for running SPARTA without any user input. Assumes data is on the desktop. If this"
+                    " option is specified, you must fill out the configuration file (ConfigFile.txt) with the appropriate experimental conditions in the SPARTA folder.",
+                    action="store_true", dest="noninteractive")
 
 
 trim = optparse.OptionGroup(optParser, 'Trimmomatic options', "The order the options will be run are: ILLUMINACLIP, LEADING, TRAILING, SLIDINGWINDOW, MINLEN")
@@ -34,8 +39,8 @@ trim.add_option("--trail", help="Set the minimum quality required to keep a base
 trim.add_option("--slidewin", help="SLIDINGWINDOW options. Default is SLIDINGWINDOW:4:15. Usage: --slidewin=<window_size>:<required_quality>",
                   action="store", default="4:15", dest="slidingwindow")
 
-#bowtie = optparse.OptionGroup(optParser, 'Bowtie options for single-end reads')
-#bowtie.add_option("")
+# bowtie = optparse.OptionGroup(optParser, 'Bowtie options for single-end reads')
+# bowtie.add_option("")
 
 htseq = optparse.OptionGroup(optParser, 'HTSeq options')
 htseq.add_option("--stranded", help="Stranded options: yes, no, reverse. Default is --stranded=reverse. Usage: --stranded=yes/no/reverse",

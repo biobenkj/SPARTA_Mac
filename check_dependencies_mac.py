@@ -161,13 +161,20 @@ class CheckDependencies(object):
 
         desk_path = os.path.join(subprocess.Popen("echo $HOME", shell=True, stdout=subprocess.PIPE).stdout.readline().strip("\n"), "Desktop")
         #This is explicitly coded to ensure that the rest of the functions are able to find the appropriate binaries
-        sparta_dir = os.path.join(desk_path, "SPARTA_Mac")
-        if not os.path.lexists(desk_path):
-            print "Unable to find the Desktop."
-        while not os.path.lexists(sparta_dir):
-            sparta_dir = str(raw_input("SPARTA_Mac folder is not on the Desktop. Please place the folder on the Desktop or enter the file path for the folder location or enter quit to exit the program:"))
-            if sparta_dir.upper() == "Q" or sparta_dir.upper() == "QUIT":
-                quit()
-            if not os.path.lexists(sparta_dir):
-                print("Invalid file path. The path you have selected does not exist or was not written correctly. \nAn example of path on Mac OS X: /Users/yourusername/Desktop/SPARTA_Mac")
+        try:
+            if os.path.lexists(os.path.join(desk_path, "SPARTA_Mac")):
+                sparta_dir = os.path.join(desk_path, "SPARTA_Mac")
+
+            elif os.path.lexists(os.path.join(desk_path, "SPARTA_Mac-master")):
+                sparta_dir = os.path.join(desk_path, "SPARTA_Mac-master")
+
+        except:
+            print "Couldn't find the SPARTA_Mac folder on the Desktop"
+
+            while not os.path.lexists(sparta_dir):
+                sparta_dir = str(raw_input("SPARTA_Mac folder is not on the Desktop. Please place the folder on the Desktop or enter the file path for the folder location or enter quit to exit the program:"))
+                if sparta_dir.upper() == "Q" or sparta_dir.upper() == "QUIT":
+                    quit()
+                if not os.path.lexists(sparta_dir):
+                    print("Invalid file path. The path you have selected does not exist or was not written correctly. \nAn example of path on Mac OS X: /Users/yourusername/Desktop/SPARTA_Mac")
         return sparta_dir
