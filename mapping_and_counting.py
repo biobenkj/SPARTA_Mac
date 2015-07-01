@@ -13,7 +13,7 @@ class Mapping_and_Counting(object):
 
         return
 
-    def bowtie(self, datalocation, analysislocation):
+    def bowtie(self, datalocation, analysislocation, options):
         """Run Bowtie for SE reads less than 50 bp in length.
         Will add the ability to run Bowtie2 for PE and SE with
         reads greater than 50 bp."""
@@ -22,6 +22,7 @@ class Mapping_and_Counting(object):
         qc = qc_analysis.QC_analysis()
         gff, genref = qc.findreferencefiles(datalocation)
         copy(genref, os.path.join(analysislocation, 'Bowtie'))
+        genrefname = genref.split("/")[-1]
         copy(gff, os.path.join(analysislocation, 'HTSeq'))
         # subprocess.Popen("cp " + genref + " " + analysislocation + "/Bowtie", shell=True).wait()
         # subprocess.Popen("cp " + gff + " " + analysislocation + "/HTSeq", shell=True).wait()
@@ -35,8 +36,20 @@ class Mapping_and_Counting(object):
             extension = file.split(".")[-1]
             if extension == "gz":
                 subprocess.Popen("gunzip -c " + os.path.join(analysislocation, "QC", file) + " > " + os.path.join(analysislocation, "Bowtie", os.path.splitext(file)[0]), shell=True).wait()
+            else:
+                copy(os.path.join(analysislocation, "QC", file), os.path.join(analysislocation, "Bowtie"))
+
+        if options.cleanup:
+            for file in os.listdir(os.path.join(analysislocation, "QC")):
+                extension = file.split(".")[-1]
+                if extension == "gz" or extension in ["fq, fastq"]:
+                    subprocess.Popen("rm " + os.path.join(analysislocation, "QC", "{file}".format(file=file)))
+
         print "Building the Bowtie index from the reference genome"
-        subprocess.Popen("./bowtie-build -q -f " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0] + " " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0], shell=True).wait()
+        if options.verbose:
+            subprocess.Popen("./bowtie-build -f " + os.path.join(analysislocation, "Bowtie", genrefname) + " " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0], shell=True).wait()
+        else:
+            subprocess.Popen("./bowtie-build -q -f " + os.path.join(analysislocation, "Bowtie", genrefname) + " " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0], shell=True).wait()
         allebwtfiles = glob.glob("*.ebwt")[:]
         for ebwtfile in allebwtfiles:
             copy(ebwtfile, os.path.join(analysislocation, "Bowtie"))
@@ -47,14 +60,13 @@ class Mapping_and_Counting(object):
             if extension == ".fq" or extension == ".fastq":
                 fname = os.path.splitext(file)[0]
                 strippedfile = fname[len('trimmed'):]
-                subprocess.Popen("./bowtie -S " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
-            # elif extension == ".fastq":
-            #     fname = os.path.splitext(file)[0]
-            #     strippedfile = fname[len('trimmed'):]
-            #     subprocess.Popen("./bowtie -S " + analysislocation + "/Bowtie/trimmedMtbCDC1551" + " " + analysislocation + "/Bowtie/" + file + " > " + analysislocation + "/Bowtie/align" + strippedfile + ".sam", shell=True).wait()
+                if options.verbose:
+                    subprocess.Popen("./bowtie -S " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
+                else:
+                    subprocess.Popen("./bowtie -S --quiet " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
+        return
 
-
-    def htseq(self, analysislocation):
+    def htseq(self, analysislocation, options):
         """Run htseq-count to count gene features post-Bowtie mapping"""
 
         cd = check_dependencies_mac.CheckDependencies()
@@ -64,7 +76,7 @@ class Mapping_and_Counting(object):
         # htseqcheck = cd.checkhtseq()
         # if htseqcheck == False:
         os.chdir(os.path.join(cd.getpwd(), "HTSeq-0.6.1"))
-        subprocess.Popen("python setup.py install --user", shell=True).wait()
+        subprocess.Popen("python setup.py install --user", shell=True, stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb')).wait()
         os.chdir(os.path.join(cd.getpwd(), "build", "scripts-2.7"))
         # htseq_count_path = os.path.join(cd.getpwd(), "HTSeq-0.6.1", "scripts")
             # subprocess.Popen("export CC=llvm-gcc-4.2", shell=True).wait()
@@ -78,5 +90,13 @@ class Mapping_and_Counting(object):
                 fname = os.path.splitext(mapfile)[0]
                 strippedmapfile = fname[len('align'):]
                 #Need to add the ability to change options/flags
-                subprocess.Popen("./htseq-count -m intersection-nonempty --stranded=yes " + os.path.join(analysislocation, "Bowtie", mapfile) + " " + gff + " > " + os.path.join(analysislocation, "HTSeq", "map" + strippedmapfile + ".sam"), shell=True).wait()
+                if options.verbose:
+                    subprocess.Popen("./htseq-count --mode={mode} --stranded={stranded} --order={order} --type={type} -a {minqual} --idattr={idattr} ".format(mode=options.mode, stranded=options.stranded, order=options.order, type=options.type, minqual=options.minqual, idattr=options.idattr) + os.path.join(analysislocation, "Bowtie", mapfile) + " " + gff + " > " + os.path.join(analysislocation, "HTSeq", "map" + strippedmapfile + ".sam"), shell=True).wait()
+                else:
+                    subprocess.Popen("./htseq-count --quiet --mode={mode} --stranded={stranded} --order={order} --type={type} -a {minqual} --idattr={idattr} ".format(mode=options.mode, stranded=options.stranded, order=options.order, type=options.type, minqual=options.minqual, idattr=options.idattr) + os.path.join(analysislocation, "Bowtie", mapfile) + " " + gff + " > " + os.path.join(analysislocation, "HTSeq", "map" + strippedmapfile + ".sam"), shell=True).wait()
+
+        if options.cleanup:
+            for file in os.listdir(os.path.join(analysislocation, "Bowtie")):
+                subprocess.Popen("rm " + os.path.join(analysislocation, "Bowtie", "{file}".format(file=file)))
+
         return

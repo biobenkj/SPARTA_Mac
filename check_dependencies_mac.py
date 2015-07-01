@@ -33,7 +33,7 @@ class CheckDependencies(object):
         """Check to see if Java is installed properly and included in the PATH"""
 
         try:
-            subprocess.call(["java", "-version"])
+            subprocess.call(["java", "-version"], stderr=open(os.devnull, 'wb'))
 
         except:
             print "Couldn't find Java. It might not be installed or not included in the PATH"
@@ -47,7 +47,7 @@ class CheckDependencies(object):
         """Check to see if R is installed properly and included in the PATH"""
 
         try:
-            subprocess.call(["R", "--version"])
+            subprocess.call(["R", "--version"], stdout=open(os.devnull, 'wb'))
 
         except:
             print "Couldn't find R. It might not be installed or not included in the PATH"
