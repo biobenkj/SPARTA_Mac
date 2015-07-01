@@ -43,7 +43,7 @@ class Mapping_and_Counting(object):
             for file in os.listdir(os.path.join(analysislocation, "QC")):
                 extension = file.split(".")[-1]
                 if extension == "gz" or extension in ["fq, fastq"]:
-                    subprocess.Popen("rm " + os.path.join(analysislocation, "QC", "{file}".format(file=file)))
+                    subprocess.Popen("rm " + os.path.join(analysislocation, "QC", "{file}".format(file=file)), shell=True).wait()
 
         print "Building the Bowtie index from the reference genome"
         if options.verbose:
@@ -53,7 +53,6 @@ class Mapping_and_Counting(object):
         allebwtfiles = glob.glob("*.ebwt")[:]
         for ebwtfile in allebwtfiles:
             copy(ebwtfile, os.path.join(analysislocation, "Bowtie"))
-            # subprocess.Popen("cp " + ebwtfile + " " + analysislocation + "/Bowtie/", shell=True).wait()
         print "Mapping reads to the reference genome with Bowtie"
         for file in os.listdir(os.path.join(analysislocation, "Bowtie")):
             extension = os.path.splitext(file)[1]
@@ -61,9 +60,15 @@ class Mapping_and_Counting(object):
                 fname = os.path.splitext(file)[0]
                 strippedfile = fname[len('trimmed'):]
                 if options.verbose:
-                    subprocess.Popen("./bowtie -S " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
+                    subprocess.Popen("./bowtie -S --threads {threads} ".format(threads=options.threads) + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
+                elif options.mismatch:
+                    subprocess.Popen("./bowtie -S --threads {threads} -v {mismatch} ".format(threads=options.threads, mismatch=options.mismatch) + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
+                elif options.otherbowtieoptions:
+                    subprocess.Popen("./bowtie -S --threads {threads} {otherbowtieoptions} ".format(threads=options.threads, otherbowtieoptions=options.otherbowtieoptions) + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
+                elif options.mismatch and options.otherbowtieoptions:
+                    subprocess.Popen("./bowtie -S --threads {threads} -v {mismatch} {otherbowtieoptions} ".format(threads=options.threads, mismatch=options.mismatch, otherbowtieoptions=options.otherbowtieoptions) + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
                 else:
-                    subprocess.Popen("./bowtie -S --quiet " + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
+                    subprocess.Popen("./bowtie -S --quiet --threads {threads} ".format(threads=options.threads) + glob.glob(os.path.join(analysislocation, "Bowtie") + "/*.fa*")[0].split(".")[0] + " " + os.path.join(analysislocation, "Bowtie", file) + " > " + os.path.join(analysislocation, "Bowtie", "align" + strippedfile + ".sam"), shell=True).wait()
         return
 
     def htseq(self, analysislocation, options):
@@ -97,6 +102,6 @@ class Mapping_and_Counting(object):
 
         if options.cleanup:
             for file in os.listdir(os.path.join(analysislocation, "Bowtie")):
-                subprocess.Popen("rm " + os.path.join(analysislocation, "Bowtie", "{file}".format(file=file)))
+                subprocess.Popen("rm " + os.path.join(analysislocation, "Bowtie", "{file}".format(file=file)), shell=True).wait()
 
         return

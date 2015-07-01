@@ -40,8 +40,11 @@ trim.add_option("--slidewin", help="SLIDINGWINDOW options. Default is SLIDINGWIN
 trim.add_option("--minlentrim", help="Set the minimum read length to keep in base pairs. Default is 36. Usage: --minlentrim=<readlength>",
                   action="store", type="int", default=36, dest="minlentrim")
 
-# bowtie = optparse.OptionGroup(optParser, 'Bowtie options for single-end reads')
-# bowtie.add_option("")
+bowtie = optparse.OptionGroup(optParser, 'Bowtie options')
+bowtie.add_option("--mismatch", help="Output alignments with at most a defined number of mismatches. Usage: --mismatch=<integer_value>",
+                    action="store", type="int", dest="mismatch")
+bowtie.add_option("--otherbowtieoptions", help="Bowtie has so many options that it is not worth listing them here. Go to http://bowtie-bio.sourceforge.net/manual.shtml#command-line for the manual and all available options. Usage: --otherbowtieoptions='all options inputed as a string (note the quotes!)'",
+                    action="store", type="str", dest="otherbowtieoptions")
 
 htseq = optparse.OptionGroup(optParser, 'HTSeq options')
 htseq.add_option("--stranded", help="Stranded options: yes, no, reverse. Default is --stranded=reverse. Usage: --stranded=yes/no/reverse",
@@ -57,7 +60,7 @@ htseq.add_option("--mode", help="Mode to handle reads overlapping more than one 
                    action="store", default="union", dest="mode")
 
 optParser.add_option_group(trim)
-# optParser.add_option_group(bowtie)
+optParser.add_option_group(bowtie)
 optParser.add_option_group(htseq)
 (options, args) = optParser.parse_args()
 
