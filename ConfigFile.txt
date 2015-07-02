@@ -8,7 +8,8 @@ Bowtie options -> mismatches=0, allotheroptions=None
 
 HTSeq options -> stranded=reverse, order=name, minqual=10, type=exon, idattr=gene_id, mode=union
 
-Experimental conditions input
+Conditions input:
+
 These files will be named the same as your input files but with the prefix “map” and file extension “.sam”. An example would be like a file from the example data: mapgly7a.sam. REMEMBER TO ADD AS MANY EXPERIMENTAL CONDITIONS AS ARE NECESSARY! If you have 3 conditions to be tested, you will need to add Experimental_condition_3_files: below Experimental_condition_2_files:. Include the replicates for each condition in a comma-separated manner. An example would be like the files from the example data: mapgly7a.sam, mapgly7b.sam.
 
 Reference_condition_files:
