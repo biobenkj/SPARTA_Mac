@@ -117,19 +117,15 @@ class DifferentialExpression(object):
 
         return conditions_list
 
-    def writeRscript(self, analysislocation, conditions_list):
-        '''Write the R script, incorporating the user input'''
+    def generatecontrasts(self, contrastrow):
 
-        #Generate the contrasts for each comparison beyond experimental to reference
-        #This is a rather kludgy way to make this work, but it works, and scales nicely.
-        contrastrow = len(conditions_list)
         if contrastrow > 2:
             contrastcounter = 2
             contrastcol = 0
-        while contrastcounter != contrastrow:
-            contrastcol += contrastrow - contrastcounter
-            contrastcounter += 1
-        if contrastcounter:
+            while contrastcounter != contrastrow:
+                contrastcol += contrastrow - contrastcounter
+                contrastcounter += 1
+        if contrastcounter != 0:
             contrast = np.zeros((contrastcol,contrastrow)).astype(int)
             contrastcounter = 2
             rowindex = 0
@@ -142,6 +138,40 @@ class DifferentialExpression(object):
                     itercounter += 1
                     rowindex += 1
                 contrastcounter += 1
+
+        return contrast
+
+    def writeRscript(self, analysislocation, conditions_list):
+        '''Write the R script, incorporating the user input'''
+
+        #Generate the contrasts for each comparison beyond experimental to reference
+        #This is a rather kludgy way to make this work, but it works, and scales nicely.
+        contrastrow = len(conditions_list)
+        if contrastrow > 2:
+            de = DifferentialExpression()
+            contrast = de.generatecontrasts(contrastrow)
+        # contrastcounter = 0
+        # if contrastrow > 2:
+        #     contrastcounter = 2
+        #     contrastcol = 0
+        #     while contrastcounter != contrastrow:
+        #         contrastcol += contrastrow - contrastcounter
+        #         contrastcounter += 1
+        # if contrastcounter != 0:
+        #     contrast = np.zeros((contrastcol,contrastrow)).astype(int)
+        #     contrastcounter = 2
+        #     rowindex = 0
+        #     while contrastcounter != contrastrow:
+        #         iterationnumber = contrastrow - contrastcounter
+        #         itercounter = 0
+        #         while itercounter != iterationnumber:
+        #             contrast[rowindex][contrastcounter - 1] = 1
+        #             contrast[rowindex][(contrastcounter - 1)+(itercounter + 1)] = -1
+        #             itercounter += 1
+        #             rowindex += 1
+        #         contrastcounter += 1
+        else:
+            contrast = None
 
         #Writing this all is going to be rather difficult...
 
@@ -222,7 +252,10 @@ class DifferentialExpression(object):
             de_expression.write("fit <- glmFit(y, design)\n")
             de_expression.write("lrt <- glmLRT(fit, coef=2)\n")
 
-            numofcond = len(contrast[0])
+            if contrast is None:
+                numofcond = 2
+            else:
+                numofcond = len(contrast[0])
             condval = 2
             while condval != numofcond+1:
                 de_expression.write("lrt <- glmLRT(fit, coef={condval})\n".format(condval=condval))
@@ -238,22 +271,23 @@ class DifferentialExpression(object):
                 de_expression.write("write.csv(outfile, file='" + os.path.join(analysislocation, 'DEanalysis', 'ReferenceCondvsExpCond{condval}_DE.csv'.format(condval=condval)) + "')\n")
                 condval += 1
 
-            for contr in contrast:
-                trts = np.nonzero(contr)
-                reftrt = trts[0][0] + 1
-                exptrt = trts[0][1] + 1
-                contr = tuple(contr)
-                de_expression.write("lrt <- glmLRT(fit, contrast=c{contr})\n".format(contr=contr))
-                de_expression.write("FDR <- p.adjust(lrt$table$PValue, method='BH')\n")
-                de_expression.write("summary(dt <- decideTestsDGE(lrt))\n")
-                de_expression.write("isDE <- as.logical(dt)\n")
-                de_expression.write("DEnames <- rownames(y)[isDE]\n")
-                de_expression.write("png('" + os.path.join(analysislocation, 'DEanalysis', 'ExpCond{reftrt}vsExpCond{exptrt}_scatter.png'.format(reftrt=reftrt, exptrt=exptrt)) + "')\n")
-                de_expression.write("plotSmear(lrt, de.tags=DEnames, cex=0.5)\n")
-                de_expression.write("abline(h=c(-1,1), col='blue')\n")
-                de_expression.write("dev.off()\n")
-                de_expression.write("outfile <- cbind(cpm(y), lrt$table, FDR)\n")
-                de_expression.write("write.csv(outfile, file='" + os.path.join(analysislocation, 'DEanalysis', 'ExpCond{reftrt}vsExpCond{exptrt}_DE.csv'.format(reftrt=reftrt, exptrt=exptrt)) + "')\n")
+            if contrast is not None:
+                for contr in contrast:
+                    trts = np.nonzero(contr)
+                    reftrt = trts[0][0] + 1
+                    exptrt = trts[0][1] + 1
+                    contr = tuple(contr)
+                    de_expression.write("lrt <- glmLRT(fit, contrast=c{contr})\n".format(contr=contr))
+                    de_expression.write("FDR <- p.adjust(lrt$table$PValue, method='BH')\n")
+                    de_expression.write("summary(dt <- decideTestsDGE(lrt))\n")
+                    de_expression.write("isDE <- as.logical(dt)\n")
+                    de_expression.write("DEnames <- rownames(y)[isDE]\n")
+                    de_expression.write("png('" + os.path.join(analysislocation, 'DEanalysis', 'ExpCond{reftrt}vsExpCond{exptrt}_scatter.png'.format(reftrt=reftrt, exptrt=exptrt)) + "')\n")
+                    de_expression.write("plotSmear(lrt, de.tags=DEnames, cex=0.5)\n")
+                    de_expression.write("abline(h=c(-1,1), col='blue')\n")
+                    de_expression.write("dev.off()\n")
+                    de_expression.write("outfile <- cbind(cpm(y), lrt$table, FDR)\n")
+                    de_expression.write("write.csv(outfile, file='" + os.path.join(analysislocation, 'DEanalysis', 'ExpCond{reftrt}vsExpCond{exptrt}_DE.csv'.format(reftrt=reftrt, exptrt=exptrt)) + "')\n")
         return
 
     def runRscript(self, analysislocation):
@@ -278,5 +312,11 @@ class DifferentialExpression(object):
         conditions_list = de.getuserinput(analysislocation)
         de.writeRscript(analysislocation, conditions_list)
         de.runRscript(analysislocation)
+        return
 
+    def de_analysis_noninteractive(self, analysislocation, conditions_list):
+        de = DifferentialExpression()
+        de.removenoncountdata(analysislocation)
+        de.writeRscript(analysislocation, conditions_list)
+        de.runRscript(analysislocation)
         return

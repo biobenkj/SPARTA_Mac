@@ -56,7 +56,7 @@ class CheckDependencies(object):
             quit()
         return
 
-    def checknumpy(self):
+    def checknumpy(self, options):
         """Check to see if NumPy module exists"""
 
         try:
@@ -68,10 +68,11 @@ class CheckDependencies(object):
 
         if self._foundnumpy == False:
             print "You need to install 'NumPy' before proceeding, otherwise HTSeq will not work properly."
-
+            if options.noninteractive:
+                quit()
         return self._foundnumpy
 
-    def checkhtseq(self):
+    def checkhtseq(self, options):
         """Check to see if HTSeq module exists"""
 
         try:
@@ -82,7 +83,9 @@ class CheckDependencies(object):
             self._foundhtseq = False
 
         if self._foundhtseq == False:
-            print "HTSeq doesn't appear to be installed. An attempt will be made to install it for the local user."
+            print "HTSeq doesn't appear to be installed. You need to install HTSeq before proceeding"
+            if options.noninteractive:
+                quit()
 
         return self._foundhtseq
 
@@ -156,7 +159,7 @@ class CheckDependencies(object):
         desk_path = os.path.join(subprocess.Popen("echo $HOME", shell=True, stdout=subprocess.PIPE).stdout.readline().strip("\n"), "Desktop")
         return desk_path
 
-    def getSPARTAdir(self):
+    def getSPARTAdir(self, options):
         """Attempt to figure out where SPARTA is located. Default should be Desktop"""
 
         desk_path = os.path.join(subprocess.Popen("echo $HOME", shell=True, stdout=subprocess.PIPE).stdout.readline().strip("\n"), "Desktop")
@@ -171,6 +174,9 @@ class CheckDependencies(object):
         except:
             print "Couldn't find the SPARTA_Mac folder on the Desktop"
 
+            if options.noninteractive:
+                quit()
+
             while not os.path.lexists(sparta_dir):
                 sparta_dir = str(raw_input("SPARTA_Mac folder is not on the Desktop. Please place the folder on the Desktop or enter the file path for the folder location or enter quit to exit the program:"))
                 if sparta_dir.upper() == "Q" or sparta_dir.upper() == "QUIT":
@@ -178,3 +184,75 @@ class CheckDependencies(object):
                 if not os.path.lexists(sparta_dir):
                     print("Invalid file path. The path you have selected does not exist or was not written correctly. \nAn example of path on Mac OS X: /Users/yourusername/Desktop/SPARTA_Mac")
         return sparta_dir
+
+    def parseConfigFile(self, options):
+        print "SPARTA is running in non-interactive mode."
+
+        cd = CheckDependencies()
+        spartadirloc = cd.getSPARTAdir(options)
+
+        conditions_list = []
+        #check and make sure that the ConfigFile.txt exists in the SPARTA directory
+        if os.path.isfile(os.path.join(spartadirloc, "ConfigFile.txt")):
+            with open(os.path.join(spartadirloc, "ConfigFile.txt"), "r") as configfile:
+                with open(os.path.join(spartadirloc, 'conditions_input.txt'), "w") as conditions_input:
+                    for line in configfile:
+                        if line.startswith("Data") or line.startswith("Trimmomatic") or line.startswith("Bowtie") or line.startswith("HTSeq"):
+                            parameters = line.split("->")[1]
+                            paramlst = parameters.split(",")
+                            if line.startswith("Data"):
+                                dataloc = paramlst[0].strip()
+                                inputname = paramlst[-1].strip()
+                                data_path = os.path.join(subprocess.Popen("echo $HOME", shell=True, stdout=subprocess.PIPE).stdout.readline().strip("\n"), dataloc, inputname)
+                            elif line.startswith("Trimmomatic"):
+                                try:
+                                    options.threads = paramlst[0].strip().split("=")[1]
+                                    options.illuminaclip = paramlst[1].strip()[len("ILLUMINACLIP:"):]
+                                    options.leading = paramlst[2].strip()[len("LEADING:"):]
+                                    options.trailing = paramlst[3].strip()[len("TRAILING:"):]
+                                    options.slidingwindow = paramlst[4].strip()[len("SLIDINGWINDOW:"):]
+                                    options.minlentrim = paramlst[5].strip()[len("MINLEN:"):]
+                                except Exception:
+                                    print "There doesn't appear to be enough parameters associated with Trimmomatic."
+                                    print "Make sure that there are 6: threads, ILLUMINACLIP, LEADING, TRAILING, SLIDINGWINDOW, MINLEN"
+                                    print "Proceeding with defaults"
+                            elif line.startswith("Bowtie"):
+                                try:
+                                    if paramlst[0].strip().split("=")[1] != '0' and paramlst[1].strip().split("=")[1] != "None":
+                                        options.mismatch = paramlst[0].strip().split("=")[1]
+                                        options.otherbowtieoptions = paramlst[1].strip().split("=")[1]
+                                    elif paramlst[0].strip().split("=")[1] != '0':
+                                        options.mismatch = paramlst[0].strip().split("=")[1]
+                                    elif paramlst[1].strip().split("=")[1] != "None":
+                                        options.otherbowtieoptions = paramlst[1].strip().split("=")[1]
+                                    else:
+                                        print "There doesn't appear to be any options specified for Bowtie."
+                                        print "Proceeding with defaults"
+                                except Exception:
+                                    print "There seems to be an error with the options input for Bowtie."
+                                    print "Proceeding with defaults"
+                            elif line.startswith("HTSeq"):
+                                try:
+                                    options.stranded = paramlst[0].strip().split("=")[1]
+                                    options.order = paramlst[1].strip().split("=")[1]
+                                    options.minqual = paramlst[2].strip().split("=")[1]
+                                    options.type = paramlst[3].strip().split("=")[1]
+                                    options.idattr = paramlst[4].strip().split("=")[1]
+                                    options.mode = paramlst[5].strip().split("=")[1]
+                                except Exception:
+                                    print "There appears to be an issue with the parameter input for HTSeq"
+                                    print "Proceeding with defaults"
+
+                        elif line.upper().startswith("REFERENCE") or line.upper().startswith("EXPERIMENTAL"):
+                            #Generate the conditions_input.txt file
+                            conditions_input.write(line)
+                            #Strip off any newlines
+                            conditions = line.strip('\n')
+                            #Split on the colon and grab just the conditions
+                            colsep = conditions.split(':')[1]
+                            #Clean up the condition input by attempting to remove spaces and tabs if present
+                            condition = colsep.split(',')
+                            conditions_list.append(condition)
+
+
+        return conditions_list, data_path

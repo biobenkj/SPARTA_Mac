@@ -26,9 +26,9 @@ class Mapping_and_Counting(object):
         copy(gff, os.path.join(analysislocation, 'HTSeq'))
         # subprocess.Popen("cp " + genref + " " + analysislocation + "/Bowtie", shell=True).wait()
         # subprocess.Popen("cp " + gff + " " + analysislocation + "/HTSeq", shell=True).wait()
-        os.chdir(os.path.join(cd.getSPARTAdir(), "Mapping_and_counting"))
+        os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting"))
         # os.chdir(cd.getSPARTAdir() + "/Mapping_and_counting")
-        if not os.path.lexists(os.path.join(cd.getSPARTAdir(), "Mapping_and_counting", "bowtie-1.1.1")):
+        if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "bowtie-1.1.1")):
             #This will be a problem for Windows users. Distribute with unzipped binaries?
             subprocess.call(["unzip", "bowtie-1.1.1-macos-x86_64.zip"], stdout=open(os.devnull, 'wb'))
         os.chdir(os.path.join(cd.getpwd(), "bowtie-1.1.1"))
@@ -75,8 +75,8 @@ class Mapping_and_Counting(object):
         """Run htseq-count to count gene features post-Bowtie mapping"""
 
         cd = check_dependencies_mac.CheckDependencies()
-        os.chdir(os.path.join(cd.getSPARTAdir(), "Mapping_and_counting"))
-        if not os.path.lexists(os.path.join(cd.getSPARTAdir(), "Mapping_and_counting", "HTSeq-0.6.1")):
+        os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting"))
+        if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "HTSeq-0.6.1")):
             subprocess.Popen("tar -zxf HTSeq-0.6.1.tar.gz", stdout=open(os.devnull, 'wb'), shell=True).wait()
         # htseqcheck = cd.checkhtseq()
         # if htseqcheck == False:

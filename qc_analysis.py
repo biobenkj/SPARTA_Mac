@@ -94,8 +94,8 @@ class QC_analysis(object):
         'trim' to the file name."""
 
         cd = check_dependencies_mac.CheckDependencies()
-        os.chdir(os.path.join(cd.getSPARTAdir(), "QC_analysis"))
-        if not os.path.lexists(os.path.join(cd.getSPARTAdir(), "QC_analysis", "Trimmomatic-0.33")):
+        os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis"))
+        if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33")):
             #This will be a problem for Windows. Just distribute with unzipped binaries?
             subprocess.call(["unzip", "Trimmomatic-0.33.zip"], stdout=open(os.devnull, 'wb'))
         os.chdir(os.path.join(cd.getpwd(), "Trimmomatic-0.33"))
@@ -110,8 +110,8 @@ class QC_analysis(object):
         """Run FastQC for trimmed data files."""
 
         cd = check_dependencies_mac.CheckDependencies()
-        os.chdir(os.path.join(cd.getSPARTAdir(), "QC_analysis"))
-        if not os.path.lexists(cd.getSPARTAdir() + "/QC_analysis/FastQC"):
+        os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis"))
+        if not os.path.lexists(cd.getSPARTAdir(options) + "/QC_analysis/FastQC"):
             subprocess.call(["unzip", "fastqc_v0.11.3.zip"], stdout=open(os.devnull, 'wb'))
         os.chdir(os.path.join(cd.getpwd(), "FastQC"))
         subprocess.call("chmod 755 fastqc", shell=True)
