@@ -150,26 +150,6 @@ class DifferentialExpression(object):
         if contrastrow > 2:
             de = DifferentialExpression()
             contrast = de.generatecontrasts(contrastrow)
-        # contrastcounter = 0
-        # if contrastrow > 2:
-        #     contrastcounter = 2
-        #     contrastcol = 0
-        #     while contrastcounter != contrastrow:
-        #         contrastcol += contrastrow - contrastcounter
-        #         contrastcounter += 1
-        # if contrastcounter != 0:
-        #     contrast = np.zeros((contrastcol,contrastrow)).astype(int)
-        #     contrastcounter = 2
-        #     rowindex = 0
-        #     while contrastcounter != contrastrow:
-        #         iterationnumber = contrastrow - contrastcounter
-        #         itercounter = 0
-        #         while itercounter != iterationnumber:
-        #             contrast[rowindex][contrastcounter - 1] = 1
-        #             contrast[rowindex][(contrastcounter - 1)+(itercounter + 1)] = -1
-        #             itercounter += 1
-        #             rowindex += 1
-        #         contrastcounter += 1
         else:
             contrast = None
 
