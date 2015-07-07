@@ -212,7 +212,7 @@ class DifferentialExpression(object):
             # else:
             #     de_expression.write("y <- calcNormFactors(y, method=BCV)\n")
             #     print "Using BCV method"
-            print "If there is large variation between library sizes, you may want to re-run the DE analysis with 'MDSmethod=BCV'"
+            #print "If there is large variation between library sizes, you may want to re-run the DE analysis with 'MDSmethod=BCV'"
 
             de_expression.write("y$samples\n")
 
