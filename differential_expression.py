@@ -274,7 +274,7 @@ class DifferentialExpression(object):
             batchcounter = 1
             while batchcounter != grouplen:
                 batcheffectTestIdxA, batcheffectTestIdxB = (Rgrouplengths[0] - Rgrouplengths[0]) + 1, (Rgrouplengths[batchcounter] - Rgrouplengths[0]) + 1
-                de_expression.write("ifelse((mymdsobj$cmdscale.out[{batcheffectTestIdxA}, {batcheffectTestIdxA}] > 0) == (mymdsobj$cmdscale.out[{batcheffectTestIdxB}, {batcheffectTestIdxA}] > 0), 'Reference vs. Experimental {batchcounter}: Potential batch effect', 'Reference vs. Experimental {batchcounter}: All appears to be well')\n".format(batcheffectTestIdxA=batcheffectTestIdxA, batcheffectTestIdxB=batcheffectTestIdxB, batchcounter=batchcounter + 1))
+                de_expression.write("ifelse((mymdsobj$cmdscale.out[{batcheffectTestIdxA}, {batcheffectTestIdxA}] > 0) == (mymdsobj$cmdscale.out[{batcheffectTestIdxB}, {batcheffectTestIdxA}] > 0), ifelse((mymdsobj$cmdscale.out[{batcheffectTestIdxA}, 1] > 0) != (mymdsobj$cmdscale.out[{batcheffectTestIdxB}, 1] > 0), 'Reference vs. Experimental {batchcounter}: Potential batch effect', 'Reference vs. Experimental {batchcounter}: All appears to be well'), 'Reference vs. Experimental {batchcounter}: All appears to be well')\n".format(batcheffectTestIdxA=batcheffectTestIdxA, batcheffectTestIdxB=batcheffectTestIdxB, batchcounter=batchcounter + 1))
                 batchcounter += 1
             #End of batch effect test
 
