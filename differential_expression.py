@@ -42,12 +42,16 @@ class DifferentialExpression(object):
         moveforward = False
         while moveforward == False:
             conditionnumber = str(raw_input("How many conditions are there?:"))
-            if conditionnumber == '1' or conditionnumber == '0':
+            if conditionnumber in ['', '0', '1']:
                 print "You can't compare a condition to itself."
             else:
                 try:
                     int(conditionnumber)
-                    moveforward = True
+                    usersure = str(raw_input("Are you sure that's how many conditions you would like to compare? (y/n):"))
+                    if usersure.upper() == "Y":
+                        moveforward = True
+                    else:
+                        continue
                 except Exception:
                     print "Please enter a number (i.e. 2)"
         conditionnumber = int(conditionnumber)
@@ -74,7 +78,10 @@ class DifferentialExpression(object):
                     exampleconditions_input.write(exampleoutline)
                     exampleconditioncounter += 1
 
-        print "Enter the relevant file names, based on the names given in 'SPARTA has these files', with the replicates separated by a comma."
+        print "Now we need to edit a text file to specify which files belong to a given condition and which files are replicates for each condition."
+        print "The file names that you need to use are listed above under 'SPARTA has these files'."
+        print "The text file you need to edit (NOT WITH MICROSOFT WORD) using a text editor like TextEdit, is on your Desktop in RNAseq_Data -> date of the current run -> DEanalysis -> conditions_input.txt"
+        print "Enter the relevant file names, with replicates separated by a comma."
         print "As an example, please see the 'conditions_input_example.txt' in the DEanalysis folder."
 
         moveforward = False
