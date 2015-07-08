@@ -7,144 +7,92 @@ import subprocess
 
 class CheckDependencies(object):
     def __init__(self):
-        self._answerstate = False
-
+        self._javastate = False
+        self._rstate = False
+        self._numpystate = False
 
     def installdependencies(self):
-        """Ask if the user would like to install dependencies."""
+        """Ask the user to install dependencies."""
 
-        self._answer = str(raw_input("Would you like SPARTA to try and download and install the missing dependencies? (Y or N):"))
-        if self._answer.upper() == "Y" or self._answer.upper() == "YES":
-            self._answerstate = True
-        else:
-            print "You need to install Java, NumPy, matplotlib, R and an appropriate compiler (e.g. gcc) before proceeding."
-            print "Now quitting"
+        javainstall = CheckDependencies.getjavastate(self)
+        rinstall = CheckDependencies.getrstate(self)
+        numpyinstall = CheckDependencies.getnumpystate(self)
+
+        if javainstall == False:
+            print "You need to install Java or put it in your PATH. See tutorial: sparta.readthedocs.org. Quitting."
+            quit()
+        elif rinstall == False:
+            print "You need to install R or put it in your PATH. See tutorial: sparta.readthedocs.org. Quitting."
+            quit()
+        elif numpyinstall == False:
+            print "You need to install NumPy. See tutorial: sparta.readthedocs.org. Quitting."
             quit()
 
         return
 
-    def getanswerstate(self):
-        """Return self._answerstate"""
+    def getjavastate(self):
+        """Return self._javastate"""
 
-        return self._answerstate
+        return self._javastate
 
+    def getrstate(self):
+        """Return self._rstate"""
 
-    def checkjava(self):
+        return self._rstate
+
+    def getnumpystate(self):
+        """Return self._numpystate"""
+
+        return self._numpystate
+
+    def checkjava(self, options):
         """Check to see if Java is installed properly and included in the PATH"""
 
         try:
             subprocess.call(["java", "-version"], stderr=open(os.devnull, 'wb'))
+            self._javastate = True
 
         except:
             print "Couldn't find Java. It might not be installed or not included in the PATH"
             print "If it is not installed, please download and install the latest version of Java"
-            print "It can be downloaded from http://www.java.com/en/"
-            print "Trimming cannot be performed if Java is not installed. Quitting now."
-            quit()
+            print "It can be downloaded from http://www.oracle.com/technetwork/java/javase/downloads/index.html"
+            print "Trimming cannot be performed if Java is not installed. See the tutorial: sparta.readthedocs.org"
+            if options.noninteractive:
+                quit()
+
+        return self._javastate
 
 
-    def checkR(self):
+    def checkR(self, options):
         """Check to see if R is installed properly and included in the PATH"""
 
         try:
             subprocess.call(["R", "--version"], stdout=open(os.devnull, 'wb'))
+            self._rstate = True
 
-        except:
+        except Exception:
             print "Couldn't find R. It might not be installed or not included in the PATH"
             print "If it is not installed, please install R from within the 'DE_analysis' folder within SPARTA"
-            print "Differential gene expression cannot be performed if R is not installed. Quitting now."
-            quit()
-        return
+            print "Differential gene expression cannot be performed if R is not installed. See the tutorial: sparta.readthedocs.org."
+            if options.noninteractive:
+                quit()
+        return self._rstate
 
     def checknumpy(self, options):
         """Check to see if NumPy module exists"""
 
         try:
             imp.find_module('numpy')
-            self._foundnumpy = True
+            self._numpystate = True
 
         except ImportError:
-            self._foundnumpy = False
+            self._numpystate = False
 
-        if self._foundnumpy == False:
+        if self._numpystate == False:
             print "You need to install 'NumPy' before proceeding, otherwise HTSeq will not work properly."
             if options.noninteractive:
                 quit()
-        return self._foundnumpy
-
-    def checkhtseq(self, options):
-        """Check to see if HTSeq module exists"""
-
-        try:
-            imp.find_module('HTSeq')
-            self._foundhtseq = True
-
-        except ImportError:
-            self._foundhtseq = False
-
-        if self._foundhtseq == False:
-            print "HTSeq doesn't appear to be installed. You need to install HTSeq before proceeding"
-            if options.noninteractive:
-                quit()
-
-        return self._foundhtseq
-
-    # def checkmatplotlib(self):
-    #     """Check to see if matplotlib module exists"""
-    #
-    #     try:
-    #         imp.find_module('matplotlib')
-    #         foundmatplotlib = True
-    #
-    #     except ImportError:
-    #         foundmatplotlib = False
-    #
-    #     if foundmatplotlib == False:
-    #         print "You need to install 'matplotlib' before proceeding, otherwise HTSeq will not work properly."
-    #
-    #     return foundmatplotlib
-
-    def getNumPy(self):
-        """Get latest NumPy iteration from sourceforge"""
-
-        cd = CheckDependencies()
-        subprocess.call(["curl", "-L", "-O", "http://sourceforge.net/projects/numpy/files/latest/download?source=files"])
-        spartadir = cd.getSPARTAdir()
-        #Make sure the user is in the SpartaDir
-        subprocess.call(["mv", os.path.join(spartadir, "download?source=files"), os.path.join(spartadir, "numpy-latest.tar.gz")])
-        subprocess.call(["tar", "-zxf", os.path.join(spartadir, "numpy-latest.tar.gz")])
-        subprocess.call(["rm", os.path.join("numpy-latest.tar.gz")])
-        return
-
-    def installNumPy(self):
-        """Install latest NumPy from source"""
-
-        cd = CheckDependencies()
-        current_numpy = glob.glob("numpy-*")[0]
-        spartadir = cd.getSPARTAdir()
-        os.chdir(spartadir + "/" + current_numpy)
-        subprocess.call(["sudo python setup.py build install"], shell=True)
-        return
-
-    # def getmatplotlib(self):
-    #     """Get latest NumPy iteration from sourceforge"""
-    #     #IMPORTANT: for htseq-count, matplotlib is NOT required!
-    #
-    #     subprocess.call(["curl", "-L", "-O", "http://sourceforge.net/projects/matplotlib/files/latest/download?source=files"])
-    #     subprocess.call(["mv download\?source\=files matplotlib-latest.tar.gz"], shell=True)
-    #     subprocess.call(["tar", "-zxf", "matplotlib-latest.tar.gz"])
-    #     subprocess.call(["rm", "matplotlib-latest.tar.gz"])
-    #     return
-    #
-    # def installmatplotlib(self):
-    #     """Install latest matplotlib from source"""
-    #
-    #     current_matplotlib = glob.glob("matplotlib-*")[0]
-    #     spartadir = CheckDependencies.getSPARTAdir()
-    #     os.chdir(spartadir + "/" + current_matplotlib)
-    #     subprocess.call(["python setup.py build"], shell=True) #have not added 'install' yet because several dependencies
-    #     #are required to install matplotlib...
-    #     return
+        return self._numpystate
 
 
     def getpwd(self):
@@ -163,13 +111,20 @@ class CheckDependencies(object):
         """Attempt to figure out where SPARTA is located. Default should be Desktop"""
 
         desk_path = os.path.join(subprocess.Popen("echo $HOME", shell=True, stdout=subprocess.PIPE).stdout.readline().strip("\n"), "Desktop")
+        os.chdir(desk_path)
         #This is explicitly coded to ensure that the rest of the functions are able to find the appropriate binaries
+
         try:
-            if os.path.lexists(os.path.join(desk_path, "SPARTA_Mac")):
+            #Get list of SPARTA_Mac versions on the Desktop
+            spartaver = glob.glob("SPARTA_Mac-*")[:]
+            #Get latest version of SPARTA_Mac in case multiple versions exist on the Desktop
+            spartaver.sort()
+            if os.path.lexists(os.path.join(desk_path, spartaver[-1])):
+                sparta_dir = os.path.join(desk_path, spartaver[-1])
+
+            elif os.path.lexists(os.path.join(desk_path, "SPARTA_Mac")):
                 sparta_dir = os.path.join(desk_path, "SPARTA_Mac")
 
-            elif os.path.lexists(os.path.join(desk_path, "SPARTA_Mac-master")):
-                sparta_dir = os.path.join(desk_path, "SPARTA_Mac-master")
 
         except:
             print "Couldn't find the SPARTA_Mac folder on the Desktop"
@@ -181,8 +136,19 @@ class CheckDependencies(object):
                 sparta_dir = str(raw_input("SPARTA_Mac folder is not on the Desktop. Please place the folder on the Desktop or enter the file path for the folder location or enter quit to exit the program:"))
                 if sparta_dir.upper() == "Q" or sparta_dir.upper() == "QUIT":
                     quit()
-                if not os.path.lexists(sparta_dir):
+                #Get list of SPARTA_Mac versions on the Desktop
+                spartaver = glob.glob("SPARTA_Mac-*")[:]
+                #Get latest version of SPARTA_Mac in case multiple versions exist on the Desktop
+                spartaver.sort()
+                if os.path.lexists(os.path.join(desk_path, spartaver[-1])):
+                    sparta_dir = os.path.join(desk_path, spartaver[-1])
+
+                elif os.path.lexists(os.path.join(desk_path, "SPARTA_Mac")):
+                    sparta_dir = os.path.join(desk_path, "SPARTA_Mac")
+
+                elif not os.path.lexists(sparta_dir):
                     print("Invalid file path. The path you have selected does not exist or was not written correctly. \nAn example of path on Mac OS X: /Users/yourusername/Desktop/SPARTA_Mac")
+
         return sparta_dir
 
     def parseConfigFile(self, options):

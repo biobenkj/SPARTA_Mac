@@ -94,11 +94,13 @@ class QC_analysis(object):
         'trim' to the file name."""
 
         cd = check_dependencies_mac.CheckDependencies()
-        os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis"))
+
         if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33")):
-            #This will be a problem for Windows. Just distribute with unzipped binaries?
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33"))
             subprocess.call(["unzip", "Trimmomatic-0.33.zip"], stdout=open(os.devnull, 'wb'))
-        os.chdir(os.path.join(cd.getpwd(), "Trimmomatic-0.33"))
+        else:
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33"))
+
         for file in os.listdir(datalocation):
             extension = file.split(".")[1]
             if extension == "fastq" or extension == "fq":
@@ -110,10 +112,13 @@ class QC_analysis(object):
         """Run FastQC for trimmed data files."""
 
         cd = check_dependencies_mac.CheckDependencies()
-        os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis"))
-        if not os.path.lexists(cd.getSPARTAdir(options) + "/QC_analysis/FastQC"):
+
+        if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "FastQC")):
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "FastQC"))
             subprocess.call(["unzip", "fastqc_v0.11.3.zip"], stdout=open(os.devnull, 'wb'))
-        os.chdir(os.path.join(cd.getpwd(), "FastQC"))
+        else:
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "FastQC"))
+
         subprocess.call("chmod 755 fastqc", shell=True)
         print "FastQC is assessing your data set for overall quality"
         for file in os.listdir(datalocation):
