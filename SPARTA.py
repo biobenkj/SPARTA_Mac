@@ -2,8 +2,6 @@ __author__ = 'benkjohnson'
 
 import check_dependencies_mac
 import optparse
-import sys
-import os
 
 
 cd = check_dependencies_mac.CheckDependencies()
@@ -78,12 +76,26 @@ else:
 
 #Check for Java, R, and NumPy
 
-javacheck = cd.checkjava(options)
-Rcheck = cd.checkR(options)
+javacheck = cd.checkjava()
+Rcheck = cd.checkR()
 numpycheck = cd.checknumpy(options)
+# matplotlibcheck = cd.checkmatplotlib()
 
+#If NumPy can't be found, SPARTA will attempt to download and install it
 
-cd.installdependencies()
+if numpycheck == False:
+    cd.installdependencies()
+    answer = cd.getanswerstate()
+    if answer:
+        if numpycheck == False:
+            cd.getNumPy()
+            cd.installNumPy()
+        # elif numpycheck == False and matplotlibcheck == True:
+        #     cd.getNumPy()
+        #     cd.installNumPy()
+        # elif numpycheck == True and matplotlibcheck == False:
+        #     cd.getmatplotlib()
+        #     cd.installmatplotlib()
 
 print "Everything appears to be fine. Moving on.\n"
 
