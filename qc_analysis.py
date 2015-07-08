@@ -96,8 +96,9 @@ class QC_analysis(object):
         cd = check_dependencies_mac.CheckDependencies()
 
         if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33")):
-            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33"))
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis"))
             subprocess.call(["unzip", "Trimmomatic-0.33.zip"], stdout=open(os.devnull, 'wb'))
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33"))
         else:
             os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33"))
 
@@ -114,8 +115,9 @@ class QC_analysis(object):
         cd = check_dependencies_mac.CheckDependencies()
 
         if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "FastQC")):
-            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "FastQC"))
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis"))
             subprocess.call(["unzip", "fastqc_v0.11.3.zip"], stdout=open(os.devnull, 'wb'))
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "FastQC"))
         else:
             os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "FastQC"))
 

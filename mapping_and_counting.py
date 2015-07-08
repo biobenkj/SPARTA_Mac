@@ -26,9 +26,10 @@ class Mapping_and_Counting(object):
         copy(gff, os.path.join(analysislocation, 'HTSeq'))
 
         if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "bowtie-1.1.1")):
-            os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "bowtie-1.1.1"))
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting"))
             #This will be a problem for Windows users. Distribute with unzipped binaries?
             subprocess.call(["unzip", "bowtie-1.1.1-macos-x86_64.zip"], stdout=open(os.devnull, 'wb'))
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "bowtie-1.1.1"))
         else:
             os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "bowtie-1.1.1"))
         for file in os.listdir(os.path.join(analysislocation, "QC")):
@@ -78,7 +79,7 @@ class Mapping_and_Counting(object):
         if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "HTSeq-0.6.1")):
             os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting"))
             subprocess.Popen("tar -zxf HTSeq-0.6.1.tar.gz", stdout=open(os.devnull, 'wb'), shell=True).wait()
-
+            os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "HTSeq-0.6.1"))
         else:
             os.chdir(os.path.join(cd.getSPARTAdir(options), "Mapping_and_counting", "HTSeq-0.6.1"))
 
