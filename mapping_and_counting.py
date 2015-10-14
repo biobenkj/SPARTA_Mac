@@ -81,7 +81,7 @@ class Mapping_and_Counting(object):
         # htseqcheck = cd.checkhtseq()
         # if htseqcheck == False:
         os.chdir(os.path.join(cd.getpwd(), "HTSeq-0.6.1"))
-        #subprocess.Popen("python setup.py install --user", shell=True, stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb')).wait()
+        subprocess.Popen("python setup.py install --user", shell=True, stdout=open(os.devnull, 'wb'), stderr=open(os.devnull, 'wb')).wait()
         os.chdir(os.path.join(cd.getpwd(), "build", "scripts-2.7"))
         # htseq_count_path = os.path.join(cd.getpwd(), "HTSeq-0.6.1", "scripts")
             # subprocess.Popen("export CC=llvm-gcc-4.2", shell=True).wait()
