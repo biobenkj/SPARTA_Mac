@@ -207,13 +207,6 @@ class DifferentialExpression(object):
 
             de_expression.write("y <- calcNormFactors(y)\n")
 
-            # if MDSmethod == False:
-            #     de_expression.write("y <- calcNormFactors(y)\n")
-            # else:
-            #     de_expression.write("y <- calcNormFactors(y, method=BCV)\n")
-            #     print "Using BCV method"
-            #print "If there is large variation between library sizes, you may want to re-run the DE analysis with 'MDSmethod=BCV'"
-
             de_expression.write("y$samples\n")
 
             de_expression.write("png('" + os.path.join(analysislocation, 'DEanalysis', 'MDSplot.png') + "')\n")
@@ -270,12 +263,84 @@ class DifferentialExpression(object):
                     de_expression.write("write.csv(outfile, file='" + os.path.join(analysislocation, 'DEanalysis', 'ExpCond{reftrt}vsExpCond{exptrt}_DE.csv'.format(reftrt=reftrt, exptrt=exptrt)) + "')\n")
             #Batch effect test: compare the first two samples of the conditions tested based on MDS plot
             #Reasoning: if the first two samples
-            grouplen = len(Rgrouplengths)
+
+            #Batch effect test of experimental treatments against the reference
+            condval = 2
             batchcounter = 1
-            while batchcounter != grouplen:
-                batcheffectTestIdxA, batcheffectTestIdxB = (Rgrouplengths[0] - Rgrouplengths[0]) + 1, (Rgrouplengths[batchcounter] - Rgrouplengths[0]) + 1
-                de_expression.write("ifelse((mymdsobj$cmdscale.out[{batcheffectTestIdxA}, {batcheffectTestIdxA}] > 0) == (mymdsobj$cmdscale.out[{batcheffectTestIdxB}, {batcheffectTestIdxA}] > 0), ifelse((mymdsobj$cmdscale.out[{batcheffectTestIdxA}, 1] > 0) != (mymdsobj$cmdscale.out[{batcheffectTestIdxB}, 1] > 0), 'Reference vs. Experimental {batchcounter}: Potential batch effect', 'Reference vs. Experimental {batchcounter}: All appears to be well'), 'Reference vs. Experimental {batchcounter}: All appears to be well')\n".format(batcheffectTestIdxA=batcheffectTestIdxA, batcheffectTestIdxB=batcheffectTestIdxB, batchcounter=batchcounter + 1))
+            while condval != numofcond+1:
+                refgrouplength = Rgrouplengths[0]
+                trtgrouplength = Rgrouplengths[batchcounter] - Rgrouplengths[batchcounter - 1]
+                mdsgroup = []
+                mdssamps = []
+                for reffacnum in range(0, refgrouplength):
+                    mdsgroup.append('1')
+                    mdssamps.append(Rvarlst[reffacnum])
+                for trtfacnum in range(0, trtgrouplength):
+                    mdsgroup.append('2')
+                    mdssamps.append(Rvarlst[Rgrouplengths[batchcounter] - refgrouplength + trtfacnum])
+                mdsgroup = map(str, mdsgroup)
+                mdsgroupjoin = ','.join(mdsgroup)
+                de_expression.write('ReferenceCondvsExpCond{condval}'.format(condval=condval) + 'mdsgroup <- factor(c(' + mdsgroupjoin + '))\n')
+                mdssamps = map(str, mdssamps)
+                mdssampsjoin = ','.join(mdssamps)
+                de_expression.write('ReferenceCondvsExpCond{condval}'.format(condval=condval) + 'mdssamps <- cbind(' + mdssampsjoin + ')\n')
+                de_expression.write("y <- DGEList(counts=ReferenceCondvsExpCond{condval}".format(condval=condval) + "mdssamps, group=ReferenceCondvsExpCond{condval}".format(condval=condval) + "mdsgroup)\n")
+
+                halfofsamples = len(mdsgroup)/2
+                de_expression.write("keep <- rowSums(cpm(y)>2)>={halfofsamples}\n".format(halfofsamples=halfofsamples))
+                de_expression.write("y <- y[keep,]\n")
+
+                de_expression.write("y$samples$lib.size <- colSums(y$counts)\n")
+
+                de_expression.write("y <- calcNormFactors(y)\n")
+
+                de_expression.write("png('" + os.path.join(analysislocation, 'DEanalysis', 'ReferenceCondvsExpCond{condval}'.format(condval=condval) + 'MDSplot.png') + "')\n")
+                de_expression.write("mymdsobj <- plotMDS(y)\n")
+                de_expression.write("dev.off()\n")
+                batcheffectTestIdxA, batcheffectTestIdxB = 1, refgrouplength + 1
+                de_expression.write("ifelse((mymdsobj$cmdscale.out[{batcheffectTestIdxA}, {batcheffectTestIdxA}] > 0) == (mymdsobj$cmdscale.out[{batcheffectTestIdxB}, {batcheffectTestIdxA}] > 0), 'Reference vs. Experimental {batchcounter}: Potential batch effect', 'Reference vs. Experimental {batchcounter}: All appears to be well')\n".format(batcheffectTestIdxA=batcheffectTestIdxA, batcheffectTestIdxB=batcheffectTestIdxB, batchcounter=batchcounter + 1))
                 batchcounter += 1
+                condval += 1
+
+
+            #Batch effect test for experimental by experimental pairwise comparisons
+            if contrast is not None:
+                for contr in contrast:
+                    trts = np.nonzero(contr)
+                    exprefgrouplength = Rgrouplengths[trts[0][0]] - Rgrouplengths[trts[0][0] - 1]
+                    exptrtgrouplength = Rgrouplengths[trts[0][1]] - Rgrouplengths[trts[0][1] - 1]
+                    mdsgroup = []
+                    mdssamps = []
+                    for reffacnum in range(0, exprefgrouplength):
+                        mdsgroup.append('1')
+                        mdssamps.append(Rvarlst[Rgrouplengths[trts[0][0]] - exprefgrouplength + reffacnum])
+                    for trtfacnum in range(0, exptrtgrouplength):
+                        mdsgroup.append('2')
+                        mdssamps.append(Rvarlst[Rgrouplengths[trts[0][1]] - exptrtgrouplength + trtfacnum])
+                    mdsgroup = map(str, mdsgroup)
+                    mdsgroupjoin = ','.join(mdsgroup)
+                    reftrtnum = trts[0][0] + 1
+                    exptrtnum = trts[0][1] + 1
+                    de_expression.write('ExpCond{reftrtnum}vsExpCond{exptrtnum}'.format(reftrtnum = reftrtnum, exptrtnum = exptrtnum) + 'mdsgroup <- factor(c(' + mdsgroupjoin + '))\n')
+                    mdssamps = map(str, mdssamps)
+                    mdssampsjoin = ','.join(mdssamps)
+                    de_expression.write('ExpCond{reftrtnum}vsExpCond{exptrtnum}'.format(reftrtnum = reftrtnum, exptrtnum = exptrtnum) + 'mdssamps <- cbind(' + mdssampsjoin + ')\n')
+                    de_expression.write("y <- DGEList(counts=ExpCond{reftrtnum}vsExpCond{exptrtnum}".format(reftrtnum = reftrtnum, exptrtnum = exptrtnum) + "mdssamps, group=ExpCond{reftrtnum}vsExpCond{exptrtnum}".format(reftrtnum = reftrtnum, exptrtnum = exptrtnum) + "mdsgroup)\n")
+
+                    halfofsamples = len(mdsgroup)/2
+                    de_expression.write("keep <- rowSums(cpm(y)>2)>={halfofsamples}\n".format(halfofsamples=halfofsamples))
+                    de_expression.write("y <- y[keep,]\n")
+
+                    de_expression.write("y$samples$lib.size <- colSums(y$counts)\n")
+
+                    de_expression.write("y <- calcNormFactors(y)\n")
+
+                    de_expression.write("png('" + os.path.join(analysislocation, 'DEanalysis', 'ExpCond{reftrtnum}vsExpCond{exptrtnum}'.format(reftrtnum = reftrtnum, exptrtnum = exptrtnum) + 'MDSplot.png') + "')\n")
+                    de_expression.write("mymdsobj <- plotMDS(y)\n")
+                    de_expression.write("dev.off()\n")
+                    batcheffectTestIdxA, batcheffectTestIdxB = 1, exprefgrouplength + 1
+                    de_expression.write("ifelse((mymdsobj$cmdscale.out[{batcheffectTestIdxA}, {batcheffectTestIdxA}] > 0) == (mymdsobj$cmdscale.out[{batcheffectTestIdxB}, {batcheffectTestIdxA}] > 0), 'Experimental {reftrtnum} vs Experimental {exptrtnum}: Potential batch effect', 'Experimental {reftrtnum} vs Experimental {exptrtnum}: All appears to be well')\n".format(batcheffectTestIdxA=batcheffectTestIdxA, batcheffectTestIdxB=batcheffectTestIdxB, reftrtnum = reftrtnum, exptrtnum = exptrtnum))
+
             #End of batch effect test
 
         return
