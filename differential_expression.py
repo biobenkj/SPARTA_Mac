@@ -192,7 +192,7 @@ class DifferentialExpression(object):
                     if treatments != len(conditions_list)+1 and conditions_list[treatments][group] != '':
                         Rgrouplst.append(repnum)
                 repnum += 1
-                Rgrouplengths.append(len(Rgrouplst)) #eventually use this to try and test for batch effects in n-conditions
+                Rgrouplengths.append(len(Rgrouplst))
             Rgrouplst = map(str, Rgrouplst)
             Rgrouplstjoin = ",".join(Rgrouplst)
             de_expression.write("group <- factor(c(" + Rgrouplstjoin + "))\n")
@@ -262,7 +262,6 @@ class DifferentialExpression(object):
                     de_expression.write("outfile <- cbind(cpm(y), lrt$table, FDR)\n")
                     de_expression.write("write.csv(outfile, file='" + os.path.join(analysislocation, 'DEanalysis', 'ExpCond{reftrt}vsExpCond{exptrt}_DE.csv'.format(reftrt=reftrt, exptrt=exptrt)) + "')\n")
             #Batch effect test: compare the first two samples of the conditions tested based on MDS plot
-            #Reasoning: if the first two samples
 
             #Batch effect test of experimental treatments against the reference
             condval = 2

@@ -96,7 +96,6 @@ class QC_analysis(object):
         cd = check_dependencies_mac.CheckDependencies()
         os.chdir(os.path.join(cd.getSPARTAdir(options), "QC_analysis"))
         if not os.path.lexists(os.path.join(cd.getSPARTAdir(options), "QC_analysis", "Trimmomatic-0.33")):
-            #This will be a problem for Windows. Just distribute with unzipped binaries?
             subprocess.call(["unzip", "Trimmomatic-0.33.zip"], stdout=open(os.devnull, 'wb'))
         os.chdir(os.path.join(cd.getpwd(), "Trimmomatic-0.33"))
         for file in os.listdir(datalocation):

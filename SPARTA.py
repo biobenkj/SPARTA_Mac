@@ -15,11 +15,6 @@ optParser = optparse.OptionParser(
   epilog="Written by Benjamin K. Johnson (john3434@msu.edu), Michigan State University Department of " +
   "Microbiology and Molecular Genetics. (c) 2015")
 
-#Future functionality
-# optParser.add_option("--SE", help="Single-end read input. Default input choice is single-end if nothing is specified",
-#                     action="store_true", default="True", dest="seqtype")
-# optParser.add_option("--PE", help="Paired-end read input. Must have the exact same file name and end with _F for the forward read and _R for the reverse read",
-#                     action="store_false", default="False", dest="seqtype")
 optParser.add_option("--cleanup", help="Clean up the intermediate files to save space. Default action is to retain the intermediate files.", action="store_true", dest="cleanup")
 optParser.add_option("--verbose", help="Display more output for each step of the analysis.", action="store_true", dest="verbose")
 optParser.add_option("--noninteractive", help="Non-interactive mode. This is for running SPARTA without any user input. Assumes data is on the desktop. If this"
@@ -76,26 +71,9 @@ else:
 
 #Check for Java, R, and NumPy
 
-javacheck = cd.checkjava()
-Rcheck = cd.checkR()
+javacheck = cd.checkjava(options)
+Rcheck = cd.checkR(options)
 numpycheck = cd.checknumpy(options)
-# matplotlibcheck = cd.checkmatplotlib()
-
-#If NumPy can't be found, SPARTA will attempt to download and install it
-
-if numpycheck == False:
-    cd.installdependencies()
-    answer = cd.getanswerstate()
-    if answer:
-        if numpycheck == False:
-            cd.getNumPy()
-            cd.installNumPy()
-        # elif numpycheck == False and matplotlibcheck == True:
-        #     cd.getNumPy()
-        #     cd.installNumPy()
-        # elif numpycheck == True and matplotlibcheck == False:
-        #     cd.getmatplotlib()
-        #     cd.installmatplotlib()
 
 print "Everything appears to be fine. Moving on.\n"
 
@@ -168,16 +146,3 @@ else:
     #edgeR
 
     de.de_analysis(subfolderpath)
-
-
-
-
-
-
-
-
-
-
-
-
-
