@@ -85,9 +85,9 @@ class Mapping_and_Counting(object):
                 fname = os.path.splitext(mapfile)[0]
                 strippedmapfile = fname[len('align'):]
                 if options.verbose:
-                    subprocess.Popen("./htseq-count --mode={mode} --stranded={stranded} --order={order} --type={type} -a {minqual} --idattr={idattr} ".format(mode=options.mode, stranded=options.stranded, order=options.order, type=options.type, minqual=options.minqual, idattr=options.idattr) + os.path.join(analysislocation, "Bowtie", mapfile) + " " + gff + " > " + os.path.join(analysislocation, "HTSeq", "map" + strippedmapfile + ".sam"), shell=True).wait()
+                    subprocess.Popen("htseq-count --mode={mode} --stranded={stranded} --order={order} --type={type} -a {minqual} --idattr={idattr} ".format(mode=options.mode, stranded=options.stranded, order=options.order, type=options.type, minqual=options.minqual, idattr=options.idattr) + os.path.join(analysislocation, "Bowtie", mapfile) + " " + gff + " > " + os.path.join(analysislocation, "HTSeq", "map" + strippedmapfile + ".sam"), shell=True).wait()
                 else:
-                    subprocess.Popen("./htseq-count --quiet --mode={mode} --stranded={stranded} --order={order} --type={type} -a {minqual} --idattr={idattr} ".format(mode=options.mode, stranded=options.stranded, order=options.order, type=options.type, minqual=options.minqual, idattr=options.idattr) + os.path.join(analysislocation, "Bowtie", mapfile) + " " + gff + " > " + os.path.join(analysislocation, "HTSeq", "map" + strippedmapfile + ".sam"), shell=True).wait()
+                    subprocess.Popen("htseq-count --quiet --mode={mode} --stranded={stranded} --order={order} --type={type} -a {minqual} --idattr={idattr} ".format(mode=options.mode, stranded=options.stranded, order=options.order, type=options.type, minqual=options.minqual, idattr=options.idattr) + os.path.join(analysislocation, "Bowtie", mapfile) + " " + gff + " > " + os.path.join(analysislocation, "HTSeq", "map" + strippedmapfile + ".sam"), shell=True).wait()
 
         if options.cleanup:
             for file in os.listdir(os.path.join(analysislocation, "Bowtie")):
